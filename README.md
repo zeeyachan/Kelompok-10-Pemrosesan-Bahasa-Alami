@@ -1,41 +1,23 @@
+# Kelompok-10-Pemrosesan-Bahasa-Alami
+Tugas besar mata kuliah Pemrosesan Bahasa Alami Sains Data 2026
+
 ## Anggota Tim
 
-<table>
-  <tr>
-    <td align="center">
-      <a href="https://github.com/zeeyachan">
-        <img src="https://github.com/zeeyachan.png" width="100px;" alt="avatar"/>
-        <br />
-        <sub><b>Nabila Zakiyah Zahra</b></sub>
-      </a>
-      <br />
-      122450139
-      <br />
-      @zeeyachan
-    </td>
+### 👩‍💻 Nabila Zakiyah Zahra  
+[![GitHub Avatar](https://github.com/zeeyachan.png)](https://github.com/zeeyachan)  
+**NIM:** 122450139  
+**GitHub:** [@zeeyachan](https://github.com/zeeyachan)
 
-    <td align="center">
-      <a href="https://github.com/salwaf01">
-        <img src="https://github.com/salwaf01.png" width="100px;" alt="avatar"/>
-        <br />
-        <sub><b>Salwa Farhanatussaidah</b></sub>
-      </a>
-      <br />
-      122450055
-      <br />
-      @salwaf01
-    </td>
+---
 
-    <td align="center">
-      <a href="https://github.com/nasywanaff">
-        <img src="https://github.com/nasywanaff.png" width="100px;" alt="avatar"/>
-        <br />
-        <sub><b>Nasywa Nur Afifah</b></sub>
-      </a>
-      <br />
-      122450125
-      <br />
-      @nasywanaff
-    </td>
-  </tr>
-</table>
+### 👩‍💻 Salwa Farhanatussaidah  
+[![GitHub Avatar](https://github.com/salwaf01.png)](https://github.com/salwaf01)  
+**NIM:** 122450055  
+**GitHub:** [@salwaf01](https://github.com/salwaf01)
+
+---
+
+### 👩‍💻 Nasywa Nur Afifah  
+[![GitHub Avatar](https://github.com/nasywanaff.png)](https://github.com/nasywanaff)  
+**NIM:** 122450125  
+**GitHub:** [@nasywanaff](https://github.com/nasywanaff)
