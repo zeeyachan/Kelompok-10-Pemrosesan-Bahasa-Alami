@@ -20,3 +20,8 @@ python module_ML/train_run.py --csv module_ML/data/raw/tokopedia_product_reviews
 - Model baseline: `module_ML/models/baseline/`
 - Model IndoBERT: `module_ML/models/transformer/final_model/`
 - Report evaluasi: `module_ML/reports/`
+
+## Catatan Model
+
+- Baseline TF-IDF + Logistic Regression/SVM sudah memakai `class_weight="balanced"`.
+- Fine-tuning IndoBERT juga memakai weighted loss agar kelas minoritas tetap terakomodasi.

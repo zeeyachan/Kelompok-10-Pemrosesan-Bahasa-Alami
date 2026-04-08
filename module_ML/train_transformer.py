@@ -5,6 +5,7 @@ import json
 from pathlib import Path
 
 import numpy as np
+import torch
 from datasets import Dataset
 from sklearn.metrics import accuracy_score, f1_score
 from sklearn.model_selection import train_test_split
@@ -32,6 +33,20 @@ from preprocess import load_and_prepare_dataset
 
 LABEL2ID = {"negatif": 0, "netral": 1, "positif": 2}
 ID2LABEL = {v: k for k, v in LABEL2ID.items()}
+
+
+class WeightedTrainer(Trainer):
+    def __init__(self, *args, class_weights: torch.Tensor, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.class_weights = class_weights
+
+    def compute_loss(self, model, inputs, return_outputs=False, num_items_in_batch=None):
+        labels = inputs.pop("labels")
+        outputs = model(**inputs)
+        logits = outputs.logits
+        loss_fn = torch.nn.CrossEntropyLoss(weight=self.class_weights.to(logits.device))
+        loss = loss_fn(logits.view(-1, model.config.num_labels), labels.view(-1))
+        return (loss, outputs) if return_outputs else loss
 
 
 def compute_metrics(eval_pred):
@@ -85,6 +100,17 @@ def main() -> None:
     train_ds = Dataset.from_pandas(train_df.rename(columns={text_col: "text"}), preserve_index=False)
     test_ds = Dataset.from_pandas(test_df.rename(columns={text_col: "text"}), preserve_index=False)
 
+    class_counts = train_df["labels"].value_counts().reindex(sorted(LABEL2ID.values()), fill_value=0)
+    if (class_counts == 0).any():
+        missing_labels = [ID2LABEL[label_id] for label_id, count in class_counts.items() if count == 0]
+        raise ValueError(
+            "Semua kelas harus ada di data train setelah split stratified. "
+            f"Kelas yang hilang: {missing_labels}"
+        )
+
+    class_weights = class_counts.sum() / (len(class_counts) * class_counts.astype(float))
+    class_weights_tensor = torch.tensor(class_weights.to_list(), dtype=torch.float32)
+
     tokenizer = AutoTokenizer.from_pretrained(args.model_name)
 
     def tokenize_fn(batch):
@@ -122,7 +148,7 @@ def main() -> None:
         seed=RANDOM_STATE,
     )
 
-    trainer = Trainer(
+    trainer = WeightedTrainer(
         model=model,
         args=training_args,
         train_dataset=train_ds,
@@ -130,6 +156,7 @@ def main() -> None:
         tokenizer=tokenizer,
         data_collator=DataCollatorWithPadding(tokenizer=tokenizer),
         compute_metrics=compute_metrics,
+        class_weights=class_weights_tensor,
     )
 
     trainer.train()
@@ -146,6 +173,9 @@ def main() -> None:
         "test_size": len(test_df),
         "text_col": text_col,
         "label_col": label_col,
+        "class_weights": {
+            ID2LABEL[idx]: float(weight) for idx, weight in zip(class_counts.index, class_weights_tensor.tolist())
+        },
         "metrics": eval_metrics,
     }
 

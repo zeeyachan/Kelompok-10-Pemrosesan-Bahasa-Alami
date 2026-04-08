@@ -4,11 +4,23 @@ import gradio as gr
 import torch
 from transformers import AutoModelForSequenceClassification, AutoTokenizer
 
-MODEL_REPO = os.getenv("MODEL_REPO", "w11wo/indonesian-roberta-base-sentiment-classifier")
+MODEL_REPO = os.getenv("MODEL_REPO", "indobenchmark/indobert-base-p1")
+FALLBACK_REPO = "indobenchmark/indobert-base-p1"
+DEFAULT_ID2LABEL = {0: "negatif", 1: "netral", 2: "positif"}
 
-# Label ini diasumsikan sama dengan label saat fine-tuning.
-ID2LABEL = {0: "negatif", 1: "netral", 2: "positif"}
 
+def resolve_id2label(model):
+    raw_id2label = getattr(model.config, "id2label", None) or {}
+    resolved = {}
+    for idx, default_label in DEFAULT_ID2LABEL.items():
+        raw_label = raw_id2label.get(idx)
+        if raw_label is None:
+            raw_label = raw_id2label.get(str(idx))
+        if isinstance(raw_label, str) and not raw_label.startswith("LABEL_"):
+            resolved[idx] = raw_label
+        else:
+            resolved[idx] = default_label
+    return resolved
 
 def load_model(model_repo: str):
     tokenizer = AutoTokenizer.from_pretrained(model_repo)
@@ -32,7 +44,8 @@ def predict_sentiment(text: str):
         logits = MODEL(**encoded).logits
         probs = torch.softmax(logits, dim=-1)[0].cpu().numpy().tolist()
 
-    labels = [ID2LABEL.get(i, str(i)) for i in range(len(probs))]
+    id2label = resolve_id2label(MODEL)
+    labels = [id2label.get(i, str(i)) for i in range(len(probs))]
     score_map = {label: float(score) for label, score in zip(labels, probs)}
     pred_label = max(score_map, key=score_map.get)
 
@@ -43,9 +56,8 @@ def bootstrap_model():
     try:
         return load_model(MODEL_REPO)
     except Exception:
-        # Fallback agar Space tetap bisa berjalan jika model custom belum tersedia.
-        fallback_repo = "w11wo/indonesian-roberta-base-sentiment-classifier"
-        return load_model(fallback_repo)
+        # Fallback agar Space tetap bisa berjalan untuk smoke test jika repo custom belum tersedia.
+        return load_model(FALLBACK_REPO)
 
 
 TOKENIZER, MODEL = bootstrap_model()

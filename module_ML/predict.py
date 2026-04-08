@@ -9,7 +9,21 @@ from transformers import AutoModelForSequenceClassification, AutoTokenizer
 
 from preprocess import simple_text_cleaning
 
-ID2LABEL = {0: "negatif", 1: "netral", 2: "positif"}
+DEFAULT_ID2LABEL = {0: "negatif", 1: "netral", 2: "positif"}
+
+
+def resolve_id2label(model) -> dict[int, str]:
+    raw_id2label = getattr(model.config, "id2label", None) or {}
+    resolved: dict[int, str] = {}
+    for idx, default_label in DEFAULT_ID2LABEL.items():
+        raw_label = raw_id2label.get(idx)
+        if raw_label is None:
+            raw_label = raw_id2label.get(str(idx))
+        if isinstance(raw_label, str) and not raw_label.startswith("LABEL_"):
+            resolved[idx] = raw_label
+        else:
+            resolved[idx] = default_label
+    return resolved
 
 
 def predict_baseline(text: str, model_path: str) -> str:
@@ -21,6 +35,9 @@ def predict_baseline(text: str, model_path: str) -> str:
 def predict_transformer(text: str, model_dir: str) -> tuple[str, float]:
     tokenizer = AutoTokenizer.from_pretrained(model_dir)
     model = AutoModelForSequenceClassification.from_pretrained(model_dir)
+    model.eval()
+
+    id2label = resolve_id2label(model)
 
     encoded = tokenizer(
         simple_text_cleaning(text),
@@ -34,7 +51,7 @@ def predict_transformer(text: str, model_dir: str) -> tuple[str, float]:
         probs = torch.softmax(logits, dim=-1)[0]
         pred_id = int(torch.argmax(probs).item())
 
-    return ID2LABEL.get(pred_id, str(pred_id)), float(probs[pred_id].item())
+    return id2label.get(pred_id, str(pred_id)), float(probs[pred_id].item())
 
 
 def main() -> None:

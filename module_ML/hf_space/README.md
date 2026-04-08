@@ -23,4 +23,4 @@ Aplikasi Gradio untuk klasifikasi sentimen ulasan produk Tokopedia menjadi:
    `username/indobert-tokopedia-sentiment`
 3. Deploy Space.
 
-Jika `MODEL_REPO` belum diatur atau gagal dimuat, aplikasi akan mencoba fallback ke model sentimen publik agar Space tetap dapat berjalan.
+Jika `MODEL_REPO` belum diatur atau gagal dimuat, aplikasi akan mencoba fallback ke base IndoBERT agar Space tetap dapat berjalan untuk smoke test.

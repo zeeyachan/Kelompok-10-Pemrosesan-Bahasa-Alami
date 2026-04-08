@@ -52,7 +52,7 @@ Proyek ini membangun sistem analisis sentimen ulasan produk Tokopedia untuk klas
 Pendekatan yang digunakan:
 
 - Baseline machine learning: TF-IDF + Logistic Regression / SVM
-- Model utama transformer: IndoBERT (`indobenchmark/indobert-base-p1`)
+- Model utama transformer: IndoBERT (`indobenchmark/indobert-base-p1`) dengan weighted loss untuk imbalance
 
 Hasil kedua pendekatan dibandingkan menggunakan metrik evaluasi (accuracy, macro-F1, weighted-F1).
 
