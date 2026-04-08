@@ -10,11 +10,36 @@ Tugas besar mata kuliah Pemrosesan Bahasa Alami Sains Data ITERA 2026
 
 - <img src="https://github.com/nasywanaff.png" width="22"> **Nasywa Nur Afifah** (122450125) — [@nasywanaff](https://github.com/nasywanaff)
 
+
 ## Dataset
  
-https://www.kaggle.com/datasets/salmanabdu/tokopedia-product-reviews-2025
+Dataset yang digunakan berasal dari Kaggle:  
+https://www.kaggle.com/datasets/salmanabdu/tokopedia-product-reviews-2025  
 
-Dataset berisi ulasan produk Tokopedia yang digunakan untuk analisis sentimen dalam bahasa Indonesia.
+Dataset ini berisi **ulasan produk Tokopedia** yang digunakan untuk analisis sentimen dalam Bahasa Indonesia.
+
+### Deskripsi
+- Jenis data: teks ulasan pengguna  
+- Bahasa: Indonesia  
+- Domain: e-commerce  
+- Tujuan: klasifikasi sentimen (positif, netral, negatif)  
+
+### Struktur Data
+Kolom utama pada dataset:
+- `review_text` : isi ulasan pengguna  
+- `rating` : nilai rating (1–5)  
+- `label` : kategori sentimen  
+
+Contoh data:
+
+| review_text | rating | label |
+|------------|--------|-------|
+| Barang bagus, sesuai deskripsi | 5 | positif |
+| Pengiriman lama, barang kurang rapi | 2 | negatif |
+
+### Catatan
+- Data berupa teks tidak formal (mengandung typo, singkatan, dll)  
+- Dilakukan preprocessing sebelum digunakan dalam model  
 
 ## Tujuan Proyek
 
