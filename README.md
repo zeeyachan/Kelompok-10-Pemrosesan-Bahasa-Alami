@@ -137,7 +137,8 @@ python module_ML/predict.py --mode transformer --model-dir module_ML/models/tran
 
 ## Deploy ke Hugging Face Spaces
 
-Folder siap deploy tersedia di `module_ML/hf_space/`.
+Aplikasi dapat diakses melalui link berikut:
+https://huggingface.co/spaces/salwa00/kelompok10-ml-sentiment
 
 Langkah deployment:
 
