@@ -1,6 +1,6 @@
 # Kelompok-10-Pemrosesan-Bahasa-Alami
 
-Tugas besar mata kuliah Pemrosesan Bahasa Alami Sains Data 2026
+Tugas besar mata kuliah Pemrosesan Bahasa Alami Sains Data ITERA 2026
 
 ## Anggota Tim
 
