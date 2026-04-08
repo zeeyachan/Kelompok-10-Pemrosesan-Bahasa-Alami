@@ -1,0 +1,11 @@
+kagglehub==0.3.12
+pandas==2.2.3
+numpy==2.2.4
+scikit-learn==1.6.1
+joblib==1.4.2
+torch==2.6.0
+transformers==4.51.3
+datasets==3.5.0
+accelerate==1.5.2
+evaluate==0.4.3
+seqeval==1.2.2

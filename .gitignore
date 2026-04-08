@@ -1,0 +1,19 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.venv/
+venv/
+
+# Dataset and model artifacts
+module_ML/data/raw/
+module_ML/data/processed/
+module_ML/models/
+module_ML/reports/
+
+# Hugging Face / cache
+.cache/
+
+# Notebook checkpoints
+.ipynb_checkpoints/
