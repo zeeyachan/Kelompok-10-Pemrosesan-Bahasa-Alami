@@ -147,6 +147,20 @@ Langkah deployment:
 3. Set environment variable `MODEL_REPO` ke repo model hasil fine-tuning (misal: `username/indobert-tokopedia-sentiment`).
 4. Deploy.
 
+Alternatif otomatis via skrip (butuh login HF terlebih dahulu):
+
+```bash
+python module_ML/deploy_hf.py \
+	--model-repo username/indobert-tokopedia-sentiment \
+	--space-repo username/tokopedia-sentiment-space
+```
+
+Jika hanya ingin upload model tanpa update Space:
+
+```bash
+python module_ML/deploy_hf.py --model-repo username/indobert-tokopedia-sentiment
+```
+
 Setelah aktif, Space akan menerima input ulasan dan menampilkan prediksi sentimen + skor probabilitas.
 
 ## Catatan Teknis

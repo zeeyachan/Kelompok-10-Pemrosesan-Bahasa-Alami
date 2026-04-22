@@ -25,3 +25,25 @@ python module_ML/train_run.py --csv module_ML/data/raw/tokopedia_product_reviews
 
 - Baseline TF-IDF + Logistic Regression/SVM sudah memakai `class_weight="balanced"`.
 - Fine-tuning IndoBERT juga memakai weighted loss agar kelas minoritas tetap terakomodasi.
+
+## Deploy ke Hugging Face Hub
+
+Login terlebih dahulu:
+
+```bash
+huggingface-cli login
+```
+
+Upload model hasil fine-tuning:
+
+```bash
+python module_ML/deploy_hf.py --model-repo username/indobert-tokopedia-sentiment
+```
+
+Upload model + update Space sekaligus:
+
+```bash
+python module_ML/deploy_hf.py \
+	--model-repo username/indobert-tokopedia-sentiment \
+	--space-repo username/tokopedia-sentiment-space
+```
