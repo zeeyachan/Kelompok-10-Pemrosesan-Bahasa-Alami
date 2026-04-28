@@ -9,3 +9,5 @@ datasets==3.5.0
 accelerate==1.5.2
 evaluate==0.4.3
 seqeval==1.2.2
+matplotlib==3.10.1
+seaborn==0.13.2
