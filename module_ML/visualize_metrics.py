@@ -106,19 +106,9 @@ def plot_confusion_matrices():
         "Transformer (IndoBERT)": (REPORT_DIR / "transformer_metrics.json", "transformer"),
     }
 
-    has_any_confusion = False
     reports = {}
     for name, (path, model_key) in report_paths.items():
-        report = load_metrics(path, model_key=model_key)
-        reports[name] = report
-        if name != "Transformer (IndoBERT)" and report.get("confusion_matrix") is not None:
-            has_any_confusion = True
-        if name == "Transformer (IndoBERT)" and report.get("metrics", {}).get("confusion_matrix") is not None:
-            has_any_confusion = True
-
-    if not has_any_confusion:
-        print("⚠️  Data confusion matrix tidak tersedia di laporan. Confusion matrices tidak dapat dibuat.")
-        return False
+        reports[name] = load_metrics(path, model_key=model_key)
 
     class_labels = ["Negatif", "Netral", "Positif"]
 
@@ -132,7 +122,16 @@ def plot_confusion_matrices():
             cm_data = report.get("confusion_matrix")
 
         if cm_data is None:
-            ax.text(0.5, 0.5, "Tidak ada data confusion matrix", ha='center', va='center', fontsize=12)
+            ax.text(
+                0.5,
+                0.5,
+                "Confusion matrix data tidak tersedia\nJalankan pipeline training atau sediakan output JSON yang lengkap.",
+                ha='center',
+                va='center',
+                fontsize=12,
+                wrap=True,
+            )
+            ax.set_title(f"Confusion Matrix: {name}", fontsize=12, fontweight='bold')
             ax.axis('off')
             continue
 
