@@ -7,12 +7,16 @@ Program Studi Sains Data — ITERA 2026
 
 ## 🎓 Full Training Results - Ready for ArXiv
 
-**✨ Models successfully trained on complete Tokopedia dataset (65,335 samples)**
+**✨ All 4 models successfully trained on complete Tokopedia dataset (65,335 samples)**
+
+### 🤖 Machine Learning Baselines (3 models) + 🧠 Deep Learning (1 model)
 
 | Model | Accuracy | Macro F1 | Weighted F1 | Speed | Memory |
 |-------|----------|----------|-------------|-------|--------|
-| **Baseline** (TF-IDF + LogReg) | **94.36%** ⭐ | 51.64% | 95.75% | < 100ms | < 500MB |
-| **Transformer** (IndoBERT) | 88.70% | 50.88% | 92.68% | ~500ms | ~500MB |
+| **1. TF-IDF + Logistic Regression** | 94.36% | 0.5164 | 0.9575 | ~10ms | ~500MB |
+| **2. TF-IDF + Support Vector Machine** ⭐ ⭐ ⭐ | **97.60%** | **0.5506** | **0.9740** | ~15ms | ~500MB |
+| **3. TF-IDF + Multinomial Naive Bayes** | 97.53% | 0.3292 | 0.9634 | **~5ms** | ~500MB |
+| **4. IndoBERT Transformer** | 88.70% | 0.5088 | 0.9268 | ~500ms | ~500MB |
 
 - 📖 [Full Module ML Documentation](module_ML/README.md)
 - 📊 [Visualizations](module_ML/reports/) - metrics comparison, confusion matrices, model summary
@@ -79,14 +83,24 @@ Membangun sistem **analisis sentimen ulasan produk Tokopedia** untuk mengklasifi
 
 Pendekatan yang digunakan dalam proyek ini:
 
-### 1. Baseline Machine Learning
-- TF-IDF  
-- Logistic Regression  
-- Support Vector Machine (SVM)  
+### 1️⃣ Baseline Machine Learning (3 Models)
+**TF-IDF Feature Extraction + 3 Classifiers**
 
-### 2. Transformer Model
-- IndoBERT: `indobenchmark/indobert-base-p1`  
-- Menggunakan **weighted loss** untuk menangani imbalance data  
+- **TF-IDF Vectorization**: 
+  - Word n-grams: 1-3
+  - Character n-grams: 2-4
+  - Max features: 100,000
+  - Normalization: L2
+
+- **Classifiers**:
+  1. **Logistic Regression** — 94.36% accuracy
+  2. **Support Vector Machine (SVM)** — **97.60% accuracy ⭐ BEST ML**
+  3. **Multinomial Naive Bayes** — 97.53% accuracy (fastest inference ~5ms)
+
+### 2️⃣ Transformer Model (1 Model)
+- **IndoBERT**: `indobenchmark/indobert-base-p1`  
+- Menggunakan **weighted loss** untuk menangani imbalance data
+- **88.70% accuracy** — best for semantic understanding
 
 ### 📈 Evaluasi
 Model dibandingkan menggunakan:
