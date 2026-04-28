@@ -7,16 +7,18 @@ This directory contains all evaluation metrics, visualizations, and paper-ready 
 ## 📊 Visualization Files (PNG Images)
 
 ### 1. **metrics_comparison.png**
-Bar chart perbandingan performance antara Baseline dan Deep Learning model.
+Bar chart perbandingan performance antara 3 model Baseline ML dan 1 model Deep Learning.
 - **X-axis**: Metrik (Accuracy, Macro F1, Weighted F1)
 - **Y-axis**: Score (0-1)
 - **Use**: Ideal untuk Figure 1 di paper/presentation
 - **Size**: 125 KB
 
 ### 2. **confusion_matrices.png**
-Side-by-side heatmap confusion matrices untuk kedua model.
-- **Left**: Baseline model confusion matrix
-- **Right**: Deep Learning model confusion matrix
+Grid heatmap confusion matrices untuk keempat model.
+- **Top-left**: TF-IDF + Logistic Regression
+- **Top-right**: TF-IDF + Support Vector Machine
+- **Bottom-left**: TF-IDF + Multinomial Naive Bayes
+- **Bottom-right**: Transformer (IndoBERT)
 - **Classes**: Negative (0), Neutral (1), Positive (2)
 - **Use**: Untuk detail error analysis atau Figure 2
 - **Size**: 134 KB
@@ -42,8 +44,10 @@ Contains:
   "generated_at": "2026-04-28T...",
   "dataset": { /* Dataset info */ },
   "models": {
-    "baseline": { /* TF-IDF + LogReg metrics */ },
-    "deep_learning": { /* IndoBERT metrics */ }
+    "baseline_logreg": { /* TF-IDF + LogReg metrics */ },
+    "baseline_svm": { /* TF-IDF + SVM metrics */ },
+    "baseline_nb": { /* TF-IDF + Multinomial NB metrics */ },
+    "transformer": { /* IndoBERT metrics */ }
   },
   "key_findings": [ /* Research insights */ ]
 }
@@ -56,7 +60,7 @@ Contains:
 - Numerical results
 
 ### **baseline_logreg_metrics.json**
-Detailed metrics untuk Baseline model:
+Detailed metrics untuk TF-IDF + Logistic Regression:
 - Algorithm: logreg
 - Accuracy, Macro F1, Weighted F1
 - Classification report per class
@@ -64,13 +68,23 @@ Detailed metrics untuk Baseline model:
 - Test/Dataset size info
 
 ### **baseline_svm_metrics.json**
-Performance metrics untuk SVM variant (experimental):
+Detailed metrics untuk TF-IDF + Support Vector Machine:
 - Algorithm: svm
-- Comparable metrics ke LogReg
-- Useful untuk ablation study
+- Accuracy, Macro F1, Weighted F1
+- Classification report per class
+- Confusion matrix
+- Useful for model comparison
+
+### **baseline_nb_metrics.json**
+Detailed metrics untuk TF-IDF + Multinomial Naive Bayes:
+- Algorithm: nb
+- Accuracy, Macro F1, Weighted F1
+- Classification report per class
+- Confusion matrix
+- Fast inference baseline comparison
 
 ### **transformer_metrics.json**
-Detailed metrics untuk Deep Learning model:
+Detailed metrics untuk Transformer (IndoBERT):
 - Model: indobenchmark/indobert-base-p1
 - Training config (epochs, batch size, learning rate)
 - Evaluation metrics

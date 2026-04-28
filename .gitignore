@@ -12,9 +12,12 @@ module_ML/data/processed/
 module_ML/models/
 !module_ML/models/README.md
 module_ML/reports/
+!module_ML/reports/
 !module_ML/reports/README.md
 !module_ML/reports/*.json
 !module_ML/reports/*.png
+!module_ML/reports/VIEW_GUIDE.sh
+!module_ML/reports/index.html
 
 # Hugging Face / cache
 .cache/
