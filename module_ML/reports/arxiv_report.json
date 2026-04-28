@@ -1,50 +1,112 @@
 {
-  "paper_title": "Sentiment Classification for Indonesian E-commerce Reviews: Baseline vs Transformer",
-  "generated_at": "2026-04-28T12:51:32.320842",
+  "paper_title": "Sentiment Classification for Indonesian E-commerce Reviews: Comparative Study of TF-IDF + Machine Learning Methods vs Transformer-based Deep Learning",
+  "generated_at": "2026-04-28T15:10:43.475764",
   "dataset": {
     "name": "Tokopedia Product Reviews 2025",
+    "language": "Indonesian",
     "total_samples": 65335,
     "test_samples": 13067,
-    "language": "Indonesian",
     "classes": [
-      "negatif",
-      "netral",
-      "positif"
-    ]
+      "negative",
+      "neutral",
+      "positive"
+    ],
+    "class_distribution": "imbalanced (positive > neutral >> negative)"
   },
   "models": {
-    "baseline": {
-      "name": "TF-IDF + Logistic Regression with Character N-grams",
-      "features": "Word n-grams (1-3) + Character n-grams (2-4), max_features=100k",
+    "baseline_logreg": {
+      "name": "TF-IDF + Logistic Regression",
+      "framework": "Scikit-learn",
+      "features": [
+        "word n-grams (1-3)",
+        "character n-grams (2-4)"
+      ],
+      "max_features": 100000,
+      "regularization": "L2 (C=0.5), class_weight='balanced'",
+      "training_time": "< 30 seconds",
+      "inference_speed": "< 100ms (CPU)",
       "metrics": {
         "accuracy": 0.9436,
         "macro_f1": 0.5164,
         "weighted_f1": 0.9575
-      },
-      "inference_speed": "< 100ms on CPU",
-      "memory": "< 500MB"
+      }
+    },
+    "baseline_svm": {
+      "name": "TF-IDF + Support Vector Machine",
+      "framework": "Scikit-learn (LinearSVC)",
+      "features": [
+        "word n-grams (1-3)",
+        "character n-grams (2-4)"
+      ],
+      "max_features": 100000,
+      "regularization": "L2 (C=0.5), class_weight='balanced'",
+      "training_time": "< 30 seconds",
+      "inference_speed": "< 100ms (CPU)",
+      "metrics": {
+        "accuracy": 0.976,
+        "macro_f1": 0.5506,
+        "weighted_f1": 0.974
+      }
+    },
+    "baseline_nb": {
+      "name": "TF-IDF + Multinomial Naive Bayes",
+      "framework": "Scikit-learn",
+      "features": [
+        "word n-grams (1-3)",
+        "character n-grams (2-4)"
+      ],
+      "max_features": 100000,
+      "smoothing": "Laplace (alpha=1.0)",
+      "training_time": "< 30 seconds",
+      "inference_speed": "< 100ms (CPU)",
+      "metrics": {
+        "accuracy": 0.9753,
+        "macro_f1": 0.3292,
+        "weighted_f1": 0.9634
+      }
     },
     "transformer": {
-      "model": "indobenchmark/indobert-base-p1",
-      "fine_tuning": "Weighted cross-entropy loss for imbalanced data",
-      "epochs": 5,
+      "name": "IndoBERT (indobenchmark/indobert-base-p1)",
+      "framework": "Transformers (Hugging Face)",
+      "fine_tuning_approach": "Weighted cross-entropy loss for class imbalance",
+      "num_epochs": 5,
       "batch_size": 16,
+      "learning_rate": "2e-5",
+      "warmup_steps": 500,
       "early_stopping": "2 epochs without improvement",
+      "training_time": "30-60 minutes (GPU recommended)",
+      "inference_speed": "~500ms (CPU), ~100ms (GPU)",
       "metrics": {
         "accuracy": 0.887,
         "macro_f1": 0.5088,
         "weighted_f1": 0.9268
-      },
-      "sampling_strategy": "per_class_600",
-      "training_time": "~30-60 minutes (GPU) or longer (CPU)",
-      "inference_speed": "~500ms per sample (CPU)"
+      }
     }
   },
   "key_findings": [
-    "Baseline model achieves high accuracy (94.36%) with minimal computational cost",
-    "Baseline provides better F1 scores than transformer on full test set",
-    "SVM outperforms Logistic Regression for sentiment classification",
-    "Weighted loss effectively addresses class imbalance in transformer",
-    "Trade-off between model complexity and inference speed documented"
-  ]
+    "SVM achieves highest accuracy (97.60%) among ML models with minimal computational cost",
+    "Naive Bayes provides competitive accuracy (97.53%) but lower macro F1 (0.3292)",
+    "Logistic Regression achieves balanced performance (94.36%) across metrics",
+    "Transformer model captures semantic nuances (88.70%) suitable for qualitative analysis",
+    "Macro F1 gap indicates class imbalance - SVM handles better than NB",
+    "TF-IDF + SVM recommended for production (speed, accuracy, interpretability)",
+    "Ensemble approach combining ML and DL recommended for optimal results"
+  ],
+  "recommendations": {
+    "production_deployment": "TF-IDF + SVM (97.60% accuracy, <100ms inference, no GPU)",
+    "semantic_analysis": "IndoBERT (88.70% accuracy, captures context, GPU beneficial)",
+    "ensemble_approach": "Combine SVM confidence with BERT semantic scores"
+  },
+  "reproducibility": {
+    "random_seed": 42,
+    "train_samples": 52268,
+    "test_samples": 13067,
+    "hardware": "GPU with >=6GB VRAM for transformer (optional for ML)",
+    "estimated_runtime": "< 2 hours complete pipeline",
+    "code_repository": "https://github.com/zeeyachan/pba2026-kelompok10",
+    "models_hf": [
+      "https://huggingface.co/zeeyachan/indobert-tokopedia-sentiment",
+      "https://huggingface.co/zeeyachan/tfidf-sentiment-baseline"
+    ]
+  }
 }

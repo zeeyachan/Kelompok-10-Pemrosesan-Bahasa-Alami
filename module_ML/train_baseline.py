@@ -10,6 +10,7 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score, classification_report, f1_score, confusion_matrix
 from sklearn.model_selection import train_test_split
+from sklearn.naive_bayes import MultinomialNB
 from sklearn.pipeline import Pipeline, FeatureUnion
 from sklearn.svm import LinearSVC
 
@@ -26,12 +27,23 @@ from preprocess import load_and_prepare_dataset, save_processed_dataset
 
 
 def build_model(algo: str) -> Pipeline:
+    """Build ML pipeline with specified classifier.
+    
+    Args:
+        algo: Classifier algorithm - 'logreg', 'svm', or 'nb' (Naive Bayes)
+    
+    Returns:
+        Sklearn Pipeline with feature extraction and classifier
+    """
     if algo == "logreg":
         clf = LogisticRegression(max_iter=2000, class_weight="balanced", random_state=RANDOM_STATE, C=0.5)
     elif algo == "svm":
         clf = LinearSVC(class_weight="balanced", random_state=RANDOM_STATE, C=0.5)
+    elif algo == "nb":
+        # Naive Bayes doesn't support sample_weight directly, but MultinomialNB is efficient for TF-IDF
+        clf = MultinomialNB(alpha=1.0)
     else:
-        raise ValueError("Algoritma tidak valid. Gunakan: logreg atau svm")
+        raise ValueError("Algoritma tidak valid. Gunakan: logreg, svm, atau nb")
 
     # Gunakan FeatureUnion untuk menggabungkan word n-grams dan character n-grams
     feature_union = FeatureUnion([
@@ -61,9 +73,10 @@ def build_model(algo: str) -> Pipeline:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(description="Train baseline ML models with TF-IDF features")
     parser.add_argument("--csv", type=str, default=str(DEFAULT_DATASET_CSV))
-    parser.add_argument("--algo", type=str, default="logreg", choices=["logreg", "svm"])
+    parser.add_argument("--algo", type=str, default="logreg", choices=["logreg", "svm", "nb"],
+                       help="Classifier algorithm: logreg (Logistic Regression), svm (SVM), nb (Naive Bayes)")
     parser.add_argument("--text-col", type=str, default=None)
     parser.add_argument("--label-col", type=str, default=None)
     args = parser.parse_args()

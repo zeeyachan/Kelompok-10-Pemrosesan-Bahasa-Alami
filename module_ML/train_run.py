@@ -57,7 +57,7 @@ def main() -> None:
     run_transformer = args.run_transformer or (not args.run_baseline and not args.run_transformer)
 
     if run_baseline:
-        for algo in ["logreg", "svm"]:
+        for algo in ["logreg", "svm", "nb"]:
             cmd = [
                 python_exec,
                 str(MODULE_ROOT / "train_baseline.py"),
