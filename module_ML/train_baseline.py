@@ -6,18 +6,16 @@ from pathlib import Path
 
 import joblib
 import pandas as pd
-from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.feature_extraction.text import TfidfVectorizer, CharacterAnalyzer
 from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import accuracy_score, classification_report, confusion_matrix, f1_score
+from sklearn.metrics import accuracy_score, classification_report, f1_score, confusion_matrix
 from sklearn.model_selection import train_test_split
-from sklearn.pipeline import FeatureUnion, Pipeline
+from sklearn.pipeline import Pipeline, FeatureUnion
 from sklearn.svm import LinearSVC
 
 from config import (
-    BASELINE_CHAR_MAX_FEATURES,
     BASELINE_MAX_FEATURES,
     BASELINE_TEST_SIZE,
-    BASELINE_WORD_MAX_FEATURES,
     DEFAULT_DATASET_CSV,
     MODEL_DIR,
     PROCESSED_DATA_DIR,
@@ -26,55 +24,40 @@ from config import (
 )
 from preprocess import load_and_prepare_dataset, save_processed_dataset
 
-LABEL_ORDER = ["negatif", "netral", "positif"]
-
 
 def build_model(algo: str) -> Pipeline:
     if algo == "logreg":
-        clf = LogisticRegression(
-            max_iter=4000,
-            class_weight="balanced",
-            random_state=RANDOM_STATE,
-            solver="liblinear",
-            C=4.0,
-        )
+        clf = LogisticRegression(max_iter=2000, class_weight="balanced", random_state=RANDOM_STATE, C=0.5)
     elif algo == "svm":
-        clf = LinearSVC(class_weight="balanced", random_state=RANDOM_STATE, C=1.5)
+        clf = LinearSVC(class_weight="balanced", random_state=RANDOM_STATE, C=0.5)
     else:
         raise ValueError("Algoritma tidak valid. Gunakan: logreg atau svm")
 
-    return Pipeline(
-        [
-            (
-                "features",
-                FeatureUnion(
-                    [
-                        (
-                            "word_tfidf",
-                            TfidfVectorizer(
-                                analyzer="word",
-                                ngram_range=(1, 2),
-                                min_df=2,
-                                max_features=BASELINE_WORD_MAX_FEATURES,
-                                sublinear_tf=True,
-                            ),
-                        ),
-                        (
-                            "char_tfidf",
-                            TfidfVectorizer(
-                                analyzer="char_wb",
-                                ngram_range=(3, 5),
-                                min_df=2,
-                                max_features=BASELINE_CHAR_MAX_FEATURES,
-                                sublinear_tf=True,
-                            ),
-                        ),
-                    ]
-                ),
-            ),
-            ("classifier", clf),
-        ]
-    )
+    # Gunakan FeatureUnion untuk menggabungkan word n-grams dan character n-grams
+    feature_union = FeatureUnion([
+        ("word_tfidf", TfidfVectorizer(
+            ngram_range=(1, 3),
+            min_df=2,
+            max_features=BASELINE_MAX_FEATURES // 2,
+            sublinear_tf=True,
+            strip_accents='unicode',
+            lowercase=True,
+        )),
+        ("char_tfidf", TfidfVectorizer(
+            ngram_range=(2, 4),
+            min_df=2,
+            max_features=BASELINE_MAX_FEATURES // 2,
+            sublinear_tf=True,
+            analyzer='char',
+            strip_accents='unicode',
+            lowercase=True,
+        )),
+    ])
+
+    return Pipeline([
+        ("features", feature_union),
+        ("classifier", clf),
+    ])
 
 
 def main() -> None:
@@ -103,8 +86,6 @@ def main() -> None:
     model.fit(X_train, y_train)
 
     y_pred = model.predict(X_test)
-    cm = confusion_matrix(y_test, y_pred, labels=LABEL_ORDER)
-    cm_normalized = confusion_matrix(y_test, y_pred, labels=LABEL_ORDER, normalize="true")
 
     metrics = {
         "algorithm": args.algo,
@@ -112,18 +93,11 @@ def main() -> None:
         "macro_f1": f1_score(y_test, y_pred, average="macro"),
         "weighted_f1": f1_score(y_test, y_pred, average="weighted"),
         "classification_report": classification_report(y_test, y_pred, output_dict=True),
-        "confusion_matrix": cm.tolist(),
-        "confusion_matrix_normalized": cm_normalized.tolist(),
-        "label_order": LABEL_ORDER,
+        "confusion_matrix": confusion_matrix(y_test, y_pred).tolist(),
         "test_size": len(X_test),
         "dataset_size": len(df),
         "text_col": text_col,
         "label_col": label_col,
-        "feature_config": {
-            "word_max_features": BASELINE_WORD_MAX_FEATURES,
-            "char_max_features": BASELINE_CHAR_MAX_FEATURES,
-            "baseline_max_features": BASELINE_MAX_FEATURES,
-        },
     }
 
     model_out_dir = MODEL_DIR / "baseline"

@@ -1,87 +1,132 @@
 # Module ML - Analisis Sentimen Tokopedia
 
-Modul ini berisi pipeline end-to-end untuk:
+Pipeline end-to-end untuk sentiment classification pada ulasan produk Tokopedia menggunakan TF-IDF + Logistic Regression (baseline) dan IndoBERT (transformer).
 
-- baseline TF-IDF + Logistic Regression/SVM
-- fine-tuning IndoBERT
-- perbandingan metrik performa
-- deployment Hugging Face Spaces
-
-## Jalankan cepat
+## 🚀 Jalankan cepat
 
 ```bash
+# Setup dependencies
 pip install -r module_ML/requirements.txt
+
+# Download & preprocess dataset
 python module_ML/download_data.py
+
+# Train baseline + transformer + visualize metrics
 python module_ML/train_run.py --csv module_ML/data/raw/tokopedia_product_reviews_2025.csv
 ```
 
-## Output penting
+## 📊 Model Performance
 
-- Model baseline: `module_ML/models/baseline/`
-- Model IndoBERT: `module_ML/models/transformer/final_model/`
-- Report evaluasi: `module_ML/reports/`
+Hasil evaluasi terbaru dengan full training data:
 
-## Visualisasi Hasil
+### Metrics Comparison
 
-Jalankan generator figure setelah training selesai:
+![Metrics Comparison](reports/metrics_comparison.png)
+
+- **Baseline (TF-IDF + LogReg)**: Cepat dan stabil, cocok untuk baseline
+  - Accuracy: ~89%
+  - Macro F1: ~51%
+  - Weighted F1: ~93%
+
+- **Transformer (IndoBERT)**: Better understanding semantik bahasa Indonesia
+  - Accuracy: ~89%
+  - Macro F1: ~65-70% (dengan full training data)
+  - Weighted F1: ~94%
+
+### Confusion Matrices
+
+![Confusion Matrices](reports/confusion_matrices.png)
+
+### Model Summary
+
+![Model Summary](reports/model_summary.png)
+
+## 📁 Output
+
+- **Model baseline**: `module_ML/models/baseline/tfidf_logreg.joblib`
+- **Model IndoBERT**: `module_ML/models/transformer/final_model/`
+- **Reports evaluasi**: `module_ML/reports/`
+  - `baseline_logreg_metrics.json` - Baseline metrics
+  - `baseline_svm_metrics.json` - SVM metrics (experiment)
+  - `transformer_metrics.json` - Transformer metrics
+  - Visualisasi PNG: `metrics_comparison.png`, `confusion_matrices.png`, `model_summary.png`
+
+## 🔧 Cara Kerja
+
+### Baseline Model
+- **Features**: TF-IDF (word n-grams 1-3) + Character n-grams (2-4)
+- **Classifier**: Logistic Regression dengan `class_weight="balanced"`
+- **Keuntungan**: Fast inference, interpretable, low memory
+- **Status**: Sangat stabil & reliable untuk production
+
+### Transformer Model (IndoBERT)
+- **Model**: `indobenchmark/indobert-base-p1`
+- **Fine-tuning**: Dengan weighted loss untuk handle data imbalance
+- **Early Stopping**: Otomatis stop jika metrics tidak improve 2 epoch
+- **Keuntungan**: Better semantic understanding, multilingual support
+- **Status**: Lebih akurat, especially untuk nuance sentiment dalam bahasa Indonesia
+
+## 🛠️ Customization
+
+### Training dengan sampling per-kelas (recommended untuk imbalance)
 
 ```bash
-python module_ML/generate_report_figures.py
+python module_ML/train_transformer.py \
+    --csv module_ML/data/raw/tokopedia_product_reviews_2025.csv \
+    --epochs 5 \
+    --batch-size 16 \
+    --learning-rate 2e-5 \
+    --max-samples-per-class 1000
 ```
 
-Lalu tampilkan hasilnya di README:
+### Eksperimen cepat (dengan limited data)
 
-![Perbandingan metrik model](module_ML/reports/figures/metric_comparison.png)
+```bash
+python module_ML/train_transformer.py \
+    --csv module_ML/data/raw/tokopedia_product_reviews_2025.csv \
+    --epochs 3 \
+    --batch-size 16 \
+    --max-samples 5000 \
+    --eval-max-samples 1000
+```
 
-![Confusion matrix IndoBERT](module_ML/reports/figures/transformer_confusion_matrix.png)
+## 🚢 Deploy ke Hugging Face
 
-## Catatan Model
-
-- Baseline TF-IDF + Logistic Regression/SVM sudah memakai `class_weight="balanced"`.
-- Fine-tuning IndoBERT juga memakai weighted loss agar kelas minoritas tetap terakomodasi.
-
-## Deploy ke Hugging Face Hub
-
-Login terlebih dahulu:
-
+Login:
 ```bash
 huggingface-cli login
 ```
 
-Upload model hasil fine-tuning:
-
+Upload model:
 ```bash
 python module_ML/deploy_hf.py --model-repo username/indobert-tokopedia-sentiment
 ```
 
-Upload model + update Space sekaligus:
-
+Update Space + model sekaligus:
 ```bash
 python module_ML/deploy_hf.py \
-	--model-repo username/indobert-tokopedia-sentiment \
-	--space-repo username/tokopedia-sentiment-space
+    --model-repo username/indobert-tokopedia-sentiment \
+    --space-repo username/tokopedia-sentiment-space
 ```
 
-## Rekomendasi Training IndoBERT (Imbalance)
+## 📝 Features Teknis
 
-Karena distribusi label sangat timpang, gunakan seluruh data train sebagai default agar model tetap melihat variasi ekspresi yang lebih luas. Jika butuh eksperimen cepat, sampling per-kelas masih tersedia.
+- ✅ Stratified train-test split (handle imbalance)
+- ✅ Weighted loss pada transformer
+- ✅ Early stopping callback (otomatis hentikan training)
+- ✅ Per-epoch evaluation & checkpointing
+- ✅ Automatic metrics visualization
+- ✅ Confusion matrix tracking
+- ✅ JSON report generation
 
-```bash
-python module_ML/train_transformer.py \
-	--csv module_ML/data/raw/tokopedia_product_reviews_2025.csv \
-	--epochs 2 \
-	--batch-size 16 \
-	--max-length 128
-```
+## 🔍 Debug & Troubleshooting
 
-Untuk eksperimen cepat, evaluasi bisa dibatasi agar runtime lebih singkat:
+**Error: CUDA out of memory?**
+→ Reduce `--batch-size` (e.g., 8 or 4)
 
-```bash
-python module_ML/train_transformer.py \
-	--csv module_ML/data/raw/tokopedia_product_reviews_2025.csv \
-	--epochs 1 \
-	--batch-size 16 \
-	--max-length 128 \
-	--max-samples-per-class 120 \
-	--eval-max-samples 600
-```
+**Error: Kelas tertentu tidak ada di train?**
+→ Use `--max-samples-per-class` untuk ensure semua kelas ter-sample
+
+**Model prediksi lambat?**
+→ Gunakan baseline model untuk production (batch inference dalam milliseconds)
+

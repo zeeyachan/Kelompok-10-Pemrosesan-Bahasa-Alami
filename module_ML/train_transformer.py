@@ -8,15 +8,15 @@ import numpy as np
 import pandas as pd
 import torch
 from datasets import Dataset
-from sklearn.metrics import accuracy_score, confusion_matrix, f1_score
+from sklearn.metrics import accuracy_score, f1_score, confusion_matrix
 from sklearn.model_selection import train_test_split
 from transformers import (
     AutoModelForSequenceClassification,
     AutoTokenizer,
     DataCollatorWithPadding,
-    EarlyStoppingCallback,
     Trainer,
     TrainingArguments,
+    EarlyStoppingCallback,
 )
 
 from config import (
@@ -30,12 +30,12 @@ from config import (
     TRANSFORMER_MODEL_NAME,
     TRANSFORMER_NUM_EPOCHS,
     TRANSFORMER_WARMUP_RATIO,
+    TRANSFORMER_EARLY_STOPPING_PATIENCE,
 )
 from preprocess import load_and_prepare_dataset
 
 LABEL2ID = {"negatif": 0, "netral": 1, "positif": 2}
 ID2LABEL = {v: k for k, v in LABEL2ID.items()}
-LABEL_ORDER = ["negatif", "netral", "positif"]
 
 
 class WeightedTrainer(Trainer):
@@ -55,10 +55,12 @@ class WeightedTrainer(Trainer):
 def compute_metrics(eval_pred):
     logits, labels = eval_pred
     preds = np.argmax(logits, axis=-1)
+    cm = confusion_matrix(labels, preds, labels=[0, 1, 2])
     return {
         "accuracy": accuracy_score(labels, preds),
         "macro_f1": f1_score(labels, preds, average="macro"),
         "weighted_f1": f1_score(labels, preds, average="weighted"),
+        "confusion_matrix": cm.tolist(),
     }
 
 
@@ -89,14 +91,8 @@ def main() -> None:
     parser.add_argument(
         "--eval-each-epoch",
         action="store_true",
-        help="Jika diaktifkan, lakukan evaluasi dan save setiap epoch.",
-    )
-    parser.set_defaults(eval_each_epoch=True)
-    parser.add_argument(
-        "--early-stopping-patience",
-        type=int,
-        default=1,
-        help="Berhenti lebih cepat jika macro-F1 tidak membaik selama beberapa evaluasi.",
+        default=True,
+        help="Lakukan evaluasi dan save setiap epoch (default: True).",
     )
     sample_group = parser.add_mutually_exclusive_group()
     sample_group.add_argument(
@@ -213,20 +209,16 @@ def main() -> None:
         data_collator=DataCollatorWithPadding(tokenizer=tokenizer),
         compute_metrics=compute_metrics,
         class_weights=class_weights_tensor,
-        callbacks=[EarlyStoppingCallback(early_stopping_patience=args.early_stopping_patience)],
+        callbacks=[
+            EarlyStoppingCallback(
+                early_stopping_patience=TRANSFORMER_EARLY_STOPPING_PATIENCE,
+                early_stopping_threshold=0.0,
+            )
+        ],
     )
 
     trainer.train()
     eval_metrics = trainer.evaluate()
-    predictions = trainer.predict(test_ds)
-    pred_labels = np.argmax(predictions.predictions, axis=-1)
-    cm = confusion_matrix(test_df["labels"], pred_labels, labels=list(LABEL2ID.values()))
-    cm_normalized = confusion_matrix(
-        test_df["labels"],
-        pred_labels,
-        labels=list(LABEL2ID.values()),
-        normalize="true",
-    )
 
     final_dir = output_dir / "final_model"
     trainer.save_model(str(final_dir))
@@ -245,9 +237,6 @@ def main() -> None:
         "class_weights": {
             ID2LABEL[idx]: float(weight) for idx, weight in zip(class_counts.index, class_weights_tensor.tolist())
         },
-        "label_order": LABEL_ORDER,
-        "confusion_matrix": cm.tolist(),
-        "confusion_matrix_normalized": cm_normalized.tolist(),
         "metrics": eval_metrics,
     }
 

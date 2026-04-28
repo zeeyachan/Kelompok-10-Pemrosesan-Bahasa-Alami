@@ -116,6 +116,16 @@ def main() -> None:
 
     print("Ringkasan perbandingan metrik disimpan di:", summary_path)
     print(summary)
+    
+    # Generate visualisasi
+    print("\n" + "="*60)
+    print("📊 Generating visualisasi metrics...")
+    print("="*60)
+    try:
+        from visualize_metrics import generate_all_visualizations
+        generate_all_visualizations()
+    except Exception as e:
+        print(f"⚠️  Visualisasi tidak dapat dibuat: {e}")
 
 
 if __name__ == "__main__":
