@@ -9,41 +9,61 @@ import matplotlib.patches as mpatches
 import numpy as np
 import seaborn as sns
 
-from config import REPORT_DIR, MODEL_DIR
+from config import REPORT_DIR
 
 sns.set_style("whitegrid")
 plt.rcParams['figure.figsize'] = (14, 5)
 
+ARXIV_REPORT_PATH = REPORT_DIR / "arxiv_report.json"
 
-def load_metrics(report_path: Path) -> Dict[str, Any]:
-    """Load metrics dari file JSON."""
+
+def load_json(report_path: Path) -> Dict[str, Any]:
+    if not report_path.exists():
+        return {}
     with report_path.open("r", encoding="utf-8") as f:
         return json.load(f)
 
 
+def load_metrics(report_path: Path, model_key: str | None = None) -> Dict[str, Any]:
+    """Load metrics dari file JSON atau fallback ke arxiv_report.json."""
+    data = load_json(report_path)
+    if data:
+        return data
+
+    if model_key is None:
+        return {}
+
+    arxiv_report = load_json(ARXIV_REPORT_PATH)
+    return arxiv_report.get("models", {}).get(model_key, {})
+
+
 def plot_metrics_comparison():
     """Visualize perbandingan metrik dari 3 baseline ML dan 1 model transformer."""
-    report_paths = {
-        "TF-IDF + LogReg": REPORT_DIR / "baseline_logreg_metrics.json",
-        "TF-IDF + SVM": REPORT_DIR / "baseline_svm_metrics.json",
-        "TF-IDF + Multinomial NB": REPORT_DIR / "baseline_nb_metrics.json",
-        "Transformer (IndoBERT)": REPORT_DIR / "transformer_metrics.json",
+    report_mapping = {
+        "TF-IDF + LogReg": (REPORT_DIR / "baseline_logreg_metrics.json", "baseline_logreg"),
+        "TF-IDF + SVM": (REPORT_DIR / "baseline_svm_metrics.json", "baseline_svm"),
+        "TF-IDF + Multinomial NB": (REPORT_DIR / "baseline_nb_metrics.json", "baseline_nb"),
+        "Transformer (IndoBERT)": (REPORT_DIR / "transformer_metrics.json", "transformer"),
     }
 
-    missing = [name for name, path in report_paths.items() if not path.exists()]
-    if missing:
+    if not ARXIV_REPORT_PATH.exists() and any(not path.exists() for path, _ in report_mapping.values()):
+        missing = [name for name, (path, _) in report_mapping.items() if not path.exists()]
         print(f"⚠️  Laporan belum tersedia untuk: {', '.join(missing)}. Jalankan train_run.py terlebih dahulu.")
         return
 
-    reports = {name: load_metrics(path) for name, path in report_paths.items()}
+    reports = {
+        name: load_metrics(path, model_key=model_key)
+        for name, (path, model_key) in report_mapping.items()
+    }
+
     metrics_names = ["accuracy", "macro_f1", "weighted_f1"]
 
-    model_scores = []
-    for name, report in reports.items():
-        if name == "Transformer (IndoBERT)":
-            model_scores.append([report["metrics"].get(f"eval_{m}", 0) for m in metrics_names])
-        else:
-            model_scores.append([report.get(m, 0) for m in metrics_names])
+    def score(report: Dict[str, Any], key: str) -> float:
+        if "metrics" in report:
+            return report["metrics"].get(key, 0)
+        return report.get(key, 0)
+
+    model_scores = [[score(report, m) for m in metrics_names] for report in reports.values()]
 
     x = np.arange(len(metrics_names))
     width = 0.18
@@ -51,7 +71,7 @@ def plot_metrics_comparison():
     fig, ax = plt.subplots(figsize=(12, 7))
     colors = ["#3498db", "#2ecc71", "#f1c40f", "#e74c3c"]
     bars = []
-    for i, (name, scores) in enumerate(zip(report_paths.keys(), model_scores)):
+    for i, (name, scores) in enumerate(zip(reports.keys(), model_scores)):
         bars.append(
             ax.bar(x + (i - 1.5) * width, scores, width, label=name, color=colors[i], alpha=0.85)
         )
@@ -74,23 +94,32 @@ def plot_metrics_comparison():
     fig.savefig(REPORT_DIR / "metrics_comparison.png", dpi=300, bbox_inches='tight')
     print(f"✓ Visualisasi metrics comparison tersimpan: {REPORT_DIR}/metrics_comparison.png")
     plt.close()
+    return True
 
 
 def plot_confusion_matrices():
     """Visualize confusion matrix untuk ketiga baseline dan transformer."""
     report_paths = {
-        "TF-IDF + LogReg": REPORT_DIR / "baseline_logreg_metrics.json",
-        "TF-IDF + SVM": REPORT_DIR / "baseline_svm_metrics.json",
-        "TF-IDF + Multinomial NB": REPORT_DIR / "baseline_nb_metrics.json",
-        "Transformer (IndoBERT)": REPORT_DIR / "transformer_metrics.json",
+        "TF-IDF + LogReg": (REPORT_DIR / "baseline_logreg_metrics.json", "baseline_logreg"),
+        "TF-IDF + SVM": (REPORT_DIR / "baseline_svm_metrics.json", "baseline_svm"),
+        "TF-IDF + Multinomial NB": (REPORT_DIR / "baseline_nb_metrics.json", "baseline_nb"),
+        "Transformer (IndoBERT)": (REPORT_DIR / "transformer_metrics.json", "transformer"),
     }
 
-    missing = [name for name, path in report_paths.items() if not path.exists()]
-    if missing:
-        print(f"⚠️  Laporan belum tersedia untuk: {', '.join(missing)}.")
-        return
+    has_any_confusion = False
+    reports = {}
+    for name, (path, model_key) in report_paths.items():
+        report = load_metrics(path, model_key=model_key)
+        reports[name] = report
+        if name != "Transformer (IndoBERT)" and report.get("confusion_matrix") is not None:
+            has_any_confusion = True
+        if name == "Transformer (IndoBERT)" and report.get("metrics", {}).get("confusion_matrix") is not None:
+            has_any_confusion = True
 
-    reports = {name: load_metrics(path) for name, path in report_paths.items()}
+    if not has_any_confusion:
+        print("⚠️  Data confusion matrix tidak tersedia di laporan. Confusion matrices tidak dapat dibuat.")
+        return False
+
     class_labels = ["Negatif", "Netral", "Positif"]
 
     fig, axes = plt.subplots(2, 2, figsize=(18, 12))
@@ -119,30 +148,34 @@ def plot_confusion_matrices():
     fig.savefig(REPORT_DIR / "confusion_matrices.png", dpi=300, bbox_inches='tight')
     print(f"✓ Visualisasi confusion matrices tersimpan: {REPORT_DIR}/confusion_matrices.png")
     plt.close()
+    return True
 
 
-def plot_model_summary():
+def plot_model_summary() -> bool:
     """Create summary card dengan info semua model yang diuji."""
-    report_paths = {
-        "TF-IDF + LogReg": REPORT_DIR / "baseline_logreg_metrics.json",
-        "TF-IDF + SVM": REPORT_DIR / "baseline_svm_metrics.json",
-        "TF-IDF + Multinomial NB": REPORT_DIR / "baseline_nb_metrics.json",
-        "Transformer (IndoBERT)": REPORT_DIR / "transformer_metrics.json",
+    report_mapping = {
+        "TF-IDF + LogReg": (REPORT_DIR / "baseline_logreg_metrics.json", "baseline_logreg"),
+        "TF-IDF + SVM": (REPORT_DIR / "baseline_svm_metrics.json", "baseline_svm"),
+        "TF-IDF + Multinomial NB": (REPORT_DIR / "baseline_nb_metrics.json", "baseline_nb"),
+        "Transformer (IndoBERT)": (REPORT_DIR / "transformer_metrics.json", "transformer"),
     }
 
-    missing = [name for name, path in report_paths.items() if not path.exists()]
-    if missing:
-        print(f"⚠️  Laporan belum tersedia untuk: {', '.join(missing)}.")
-        return
+    arxiv_report = load_json(ARXIV_REPORT_PATH)
+    reports = {
+        name: load_metrics(path, model_key=model_key)
+        for name, (path, model_key) in report_mapping.items()
+    }
 
-    reports = {name: load_metrics(path) for name, path in report_paths.items()}
-    baseline_report = reports["TF-IDF + LogReg"]
-    dataset_size = baseline_report.get('dataset_size', 'N/A')
-    test_size = baseline_report.get('test_size', 'N/A')
+    if not any(reports.values()) and not arxiv_report:
+        print("⚠️  Laporan model tidak tersedia, tidak dapat membuat model summary.")
+        return False
 
-    def get_score(report, key):
-        if report is reports["Transformer (IndoBERT)"]:
-            return report.get("metrics", {}).get(f"eval_{key}", 0)
+    dataset_size = arxiv_report.get('dataset', {}).get('total_samples', 'N/A')
+    test_size = arxiv_report.get('dataset', {}).get('test_samples', 'N/A')
+
+    def get_score(report: Dict[str, Any], key: str) -> float:
+        if "metrics" in report:
+            return report["metrics"].get(key, 0)
         return report.get(key, 0)
 
     rows = []
@@ -180,6 +213,7 @@ Model files:
     fig.savefig(REPORT_DIR / "model_summary.png", dpi=300, bbox_inches='tight')
     print(f"✓ Model summary card tersimpan: {REPORT_DIR}/model_summary.png")
     plt.close()
+    return True
 
 
 def generate_all_visualizations():
@@ -187,21 +221,18 @@ def generate_all_visualizations():
     REPORT_DIR.mkdir(parents=True, exist_ok=True)
     
     print("📊 Generating visualisasi metrik...\n")
-    
     try:
-        plot_metrics_comparison()
-        plot_confusion_matrices()
-        plot_model_summary()
+        metrics_ok = plot_metrics_comparison()
+        confusion_ok = plot_confusion_matrices()
+        summary_ok = plot_model_summary()
 
-        created = [
-            (REPORT_DIR / "metrics_comparison.png").exists(),
-            (REPORT_DIR / "confusion_matrices.png").exists(),
-            (REPORT_DIR / "model_summary.png").exists(),
-        ]
-        if not all(created):
-            raise RuntimeError("Beberapa visualisasi belum dapat dibuat karena laporan belum lengkap.")
+        if metrics_ok and summary_ok:
+            print("\n✅ Metrics comparison dan model summary berhasil dibuat!")
+        else:
+            print("\n⚠️ Beberapa visualisasi belum berhasil dibuat.")
 
-        print("\n✅ Semua visualisasi berhasil dibuat!")
+        if not confusion_ok:
+            print("⚠️ Data confusion matrix tidak tersedia, sehingga confusion_matrices.png tidak dibuat atau diperbarui.")
     except Exception as e:
         print(f"❌ Error saat membuat visualisasi: {e}")
 
