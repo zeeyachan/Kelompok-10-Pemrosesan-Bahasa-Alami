@@ -48,6 +48,8 @@ def main() -> None:
     parser.add_argument("--max-length", type=int, default=None)
     parser.add_argument("--learning-rate", type=float, default=None)
     parser.add_argument("--max-samples", type=int, default=None)
+    parser.add_argument("--max-samples-per-class", type=int, default=None)
+    parser.add_argument("--eval-max-samples", type=int, default=None)
     args = parser.parse_args()
     python_exec = sys.executable
 
@@ -91,6 +93,10 @@ def main() -> None:
             cmd.extend(["--learning-rate", str(args.learning_rate)])
         if args.max_samples is not None:
             cmd.extend(["--max-samples", str(args.max_samples)])
+        if args.max_samples_per_class is not None:
+            cmd.extend(["--max-samples-per-class", str(args.max_samples_per_class)])
+        if args.eval_max_samples is not None:
+            cmd.extend(["--eval-max-samples", str(args.eval_max_samples)])
         run_command(cmd)
 
     REPORT_DIR.mkdir(parents=True, exist_ok=True)

@@ -47,3 +47,28 @@ python module_ML/deploy_hf.py \
 	--model-repo username/indobert-tokopedia-sentiment \
 	--space-repo username/tokopedia-sentiment-space
 ```
+
+## Rekomendasi Training IndoBERT (Imbalance)
+
+Karena distribusi label sangat timpang, jalankan training dengan sampling per-kelas agar model tidak bias ke kelas mayoritas:
+
+```bash
+python module_ML/train_transformer.py \
+	--csv module_ML/data/raw/tokopedia_product_reviews_2025.csv \
+	--epochs 3 \
+	--batch-size 16 \
+	--max-length 128 \
+	--max-samples-per-class 600
+```
+
+Untuk eksperimen cepat, evaluasi bisa dibatasi agar runtime lebih singkat:
+
+```bash
+python module_ML/train_transformer.py \
+	--csv module_ML/data/raw/tokopedia_product_reviews_2025.csv \
+	--epochs 1 \
+	--batch-size 16 \
+	--max-length 128 \
+	--max-samples-per-class 120 \
+	--eval-max-samples 600
+```

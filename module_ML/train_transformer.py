@@ -5,6 +5,7 @@ import json
 from pathlib import Path
 
 import numpy as np
+import pandas as pd
 import torch
 from datasets import Dataset
 from sklearn.metrics import accuracy_score, f1_score
@@ -59,6 +60,19 @@ def compute_metrics(eval_pred):
     }
 
 
+def sample_train_per_class(df, max_samples_per_class: int):
+    chunks = []
+    for label_id in sorted(LABEL2ID.values()):
+        subset = df[df["labels"] == label_id]
+        if subset.empty:
+            raise ValueError(f"Kelas {ID2LABEL[label_id]} tidak ada di train split.")
+        n = min(len(subset), max_samples_per_class)
+        chunks.append(subset.sample(n=n, random_state=RANDOM_STATE, replace=False))
+
+    sampled = pd.concat(chunks, ignore_index=True)
+    return sampled.sample(frac=1.0, random_state=RANDOM_STATE).reset_index(drop=True)
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--csv", type=str, default=str(DEFAULT_DATASET_CSV))
@@ -71,10 +85,28 @@ def main() -> None:
     parser.add_argument("--max-length", type=int, default=TRANSFORMER_MAX_LENGTH)
     parser.add_argument("--learning-rate", type=float, default=TRANSFORMER_LR)
     parser.add_argument(
+        "--eval-each-epoch",
+        action="store_true",
+        help="Jika diaktifkan, lakukan evaluasi dan save setiap epoch.",
+    )
+    sample_group = parser.add_mutually_exclusive_group()
+    sample_group.add_argument(
         "--max-samples",
         type=int,
         default=None,
-        help="Batasi jumlah data untuk eksperimen cepat (stratified).",
+        help="Batasi jumlah data train untuk eksperimen cepat (stratified).",
+    )
+    sample_group.add_argument(
+        "--max-samples-per-class",
+        type=int,
+        default=None,
+        help="Batasi jumlah data train per kelas agar lebih seimbang.",
+    )
+    parser.add_argument(
+        "--eval-max-samples",
+        type=int,
+        default=None,
+        help="Batasi jumlah data evaluasi (stratified) untuk eksperimen cepat.",
     )
     args = parser.parse_args()
 
@@ -82,20 +114,35 @@ def main() -> None:
     df = df.copy()
     df["labels"] = df[label_col].map(LABEL2ID)
 
-    if args.max_samples is not None and args.max_samples > 0 and args.max_samples < len(df):
-        df, _ = train_test_split(
-            df,
-            train_size=args.max_samples,
-            random_state=RANDOM_STATE,
-            stratify=df["labels"],
-        )
-
     train_df, test_df = train_test_split(
         df[[text_col, "labels"]],
         test_size=0.2,
         random_state=RANDOM_STATE,
         stratify=df["labels"],
     )
+
+    sampling_strategy = "full_train"
+    if args.max_samples_per_class is not None and args.max_samples_per_class > 0:
+        train_df = sample_train_per_class(train_df, args.max_samples_per_class)
+        sampling_strategy = f"per_class_{args.max_samples_per_class}"
+    elif args.max_samples is not None and args.max_samples > 0 and args.max_samples < len(train_df):
+        train_df, _ = train_test_split(
+            train_df,
+            train_size=args.max_samples,
+            random_state=RANDOM_STATE,
+            stratify=train_df["labels"],
+        )
+        sampling_strategy = f"stratified_train_{args.max_samples}"
+
+    eval_sampling_strategy = "full_test"
+    if args.eval_max_samples is not None and args.eval_max_samples > 0 and args.eval_max_samples < len(test_df):
+        test_df, _ = train_test_split(
+            test_df,
+            train_size=args.eval_max_samples,
+            random_state=RANDOM_STATE,
+            stratify=test_df["labels"],
+        )
+        eval_sampling_strategy = f"stratified_test_{args.eval_max_samples}"
 
     train_ds = Dataset.from_pandas(train_df.rename(columns={text_col: "text"}), preserve_index=False)
     test_ds = Dataset.from_pandas(test_df.rename(columns={text_col: "text"}), preserve_index=False)
@@ -131,8 +178,8 @@ def main() -> None:
 
     training_args = TrainingArguments(
         output_dir=str(output_dir / "checkpoints"),
-        eval_strategy="epoch",
-        save_strategy="epoch",
+        eval_strategy="epoch" if args.eval_each_epoch else "no",
+        save_strategy="epoch" if args.eval_each_epoch else "no",
         logging_strategy="epoch",
         learning_rate=args.learning_rate,
         per_device_train_batch_size=args.batch_size,
@@ -140,7 +187,7 @@ def main() -> None:
         num_train_epochs=args.epochs,
         weight_decay=0.01,
         warmup_ratio=TRANSFORMER_WARMUP_RATIO,
-        load_best_model_at_end=True,
+        load_best_model_at_end=args.eval_each_epoch,
         metric_for_best_model="macro_f1",
         greater_is_better=True,
         save_total_limit=2,
@@ -170,7 +217,10 @@ def main() -> None:
     metrics_payload = {
         "model_name": args.model_name,
         "dataset_size": len(df),
+        "train_size": len(train_df),
         "test_size": len(test_df),
+        "sampling_strategy": sampling_strategy,
+        "eval_sampling_strategy": eval_sampling_strategy,
         "text_col": text_col,
         "label_col": label_col,
         "class_weights": {
