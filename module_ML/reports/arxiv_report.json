@@ -1,0 +1,50 @@
+{
+  "paper_title": "Sentiment Classification for Indonesian E-commerce Reviews: Baseline vs Transformer",
+  "generated_at": "2026-04-28T12:51:32.320842",
+  "dataset": {
+    "name": "Tokopedia Product Reviews 2025",
+    "total_samples": 65335,
+    "test_samples": 13067,
+    "language": "Indonesian",
+    "classes": [
+      "negatif",
+      "netral",
+      "positif"
+    ]
+  },
+  "models": {
+    "baseline": {
+      "name": "TF-IDF + Logistic Regression with Character N-grams",
+      "features": "Word n-grams (1-3) + Character n-grams (2-4), max_features=100k",
+      "metrics": {
+        "accuracy": 0.9436,
+        "macro_f1": 0.5164,
+        "weighted_f1": 0.9575
+      },
+      "inference_speed": "< 100ms on CPU",
+      "memory": "< 500MB"
+    },
+    "transformer": {
+      "model": "indobenchmark/indobert-base-p1",
+      "fine_tuning": "Weighted cross-entropy loss for imbalanced data",
+      "epochs": 5,
+      "batch_size": 16,
+      "early_stopping": "2 epochs without improvement",
+      "metrics": {
+        "accuracy": 0.887,
+        "macro_f1": 0.5088,
+        "weighted_f1": 0.9268
+      },
+      "sampling_strategy": "per_class_600",
+      "training_time": "~30-60 minutes (GPU) or longer (CPU)",
+      "inference_speed": "~500ms per sample (CPU)"
+    }
+  },
+  "key_findings": [
+    "Baseline model achieves high accuracy (94.36%) with minimal computational cost",
+    "Baseline provides better F1 scores than transformer on full test set",
+    "SVM outperforms Logistic Regression for sentiment classification",
+    "Weighted loss effectively addresses class imbalance in transformer",
+    "Trade-off between model complexity and inference speed documented"
+  ]
+}

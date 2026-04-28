@@ -80,11 +80,11 @@ Hasil evaluasi terbaru dengan full training data:
 ## 📁 Output
 
 - **Model baseline**: `module_ML/models/baseline/tfidf_logreg.joblib`
-- **Model IndoBERT**: `module_ML/models/transformer/final_model/`
+- **Model deep learning**: `module_ML/models/deep_learning/final_model/` (IndoBERT)
 - **Reports evaluasi**: `module_ML/reports/`
   - `baseline_logreg_metrics.json` - Baseline metrics
   - `baseline_svm_metrics.json` - SVM metrics (experiment)
-  - `transformer_metrics.json` - Transformer metrics
+  - `transformer_metrics.json` - Deep learning metrics
   - Visualisasi PNG: `metrics_comparison.png`, `confusion_matrices.png`, `model_summary.png`
 
 ## 🔧 Cara Kerja
@@ -95,8 +95,8 @@ Hasil evaluasi terbaru dengan full training data:
 - **Keuntungan**: Fast inference, interpretable, low memory
 - **Status**: Sangat stabil & reliable untuk production
 
-### Transformer Model (IndoBERT)
-- **Model**: `indobenchmark/indobert-base-p1`
+### Deep Learning Model (IndoBERT Transformer)
+- **Model**: `indobenchmark/indobert-base-p1` - Pre-trained IndoBERT transformer
 - **Fine-tuning**: Dengan weighted loss untuk handle data imbalance
 - **Early Stopping**: Otomatis stop jika metrics tidak improve 2 epoch
 - **Keuntungan**: Better semantic understanding, multilingual support

@@ -10,7 +10,11 @@ venv/
 module_ML/data/raw/
 module_ML/data/processed/
 module_ML/models/
+!module_ML/models/README.md
 module_ML/reports/
+!module_ML/reports/README.md
+!module_ML/reports/*.json
+!module_ML/reports/*.png
 
 # Hugging Face / cache
 .cache/

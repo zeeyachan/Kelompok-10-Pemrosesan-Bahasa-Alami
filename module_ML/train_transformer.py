@@ -83,7 +83,7 @@ def main() -> None:
     parser.add_argument("--text-col", type=str, default=None)
     parser.add_argument("--label-col", type=str, default=None)
     parser.add_argument("--model-name", type=str, default=TRANSFORMER_MODEL_NAME)
-    parser.add_argument("--output-dir", type=str, default=str(MODEL_DIR / "transformer"))
+    parser.add_argument("--output-dir", type=str, default=str(MODEL_DIR / "deep_learning"))
     parser.add_argument("--epochs", type=int, default=TRANSFORMER_NUM_EPOCHS)
     parser.add_argument("--batch-size", type=int, default=TRANSFORMER_BATCH_SIZE)
     parser.add_argument("--max-length", type=int, default=TRANSFORMER_MAX_LENGTH)
