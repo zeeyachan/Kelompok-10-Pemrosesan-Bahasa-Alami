@@ -2,7 +2,24 @@
 
 Pipeline end-to-end untuk sentiment classification pada ulasan produk Tokopedia menggunakan TF-IDF + Logistic Regression (baseline) dan IndoBERT (transformer).
 
-## 🚀 Jalankan cepat
+## 🎯 Final Training Results (ArXiv-Ready)
+
+**Training completed on full dataset: 65,335 samples (80-20 split)**
+
+### Performance Summary
+
+| Metric | Baseline | Transformer |
+|--------|----------|-------------|
+| **Accuracy** | 🥇 **94.36%** | 88.70% |
+| **Macro F1** | 🥇 **51.64%** | 50.88% |
+| **Weighted F1** | 🥇 **95.75%** | 92.68% |
+| Test Samples | 13,067 | 13,067 |
+| Training Speed | < 30 sec | ~30-60 min (GPU) |
+| Inference | < 100ms/sample | ~500ms/sample |
+
+**Key Insight**: Baseline model achieves surprisingly high performance with minimal computational overhead - excellent for production deployment!
+
+## 🚀 Quick Start
 
 ```bash
 # Setup dependencies
@@ -14,6 +31,25 @@ python module_ML/download_data.py
 # Train baseline + transformer + visualize metrics
 python module_ML/train_run.py --csv module_ML/data/raw/tokopedia_product_reviews_2025.csv
 ```
+
+## 📄 ArXiv Paper Materials
+
+**Ready for submission!** Find all necessary materials in `module_ML/reports/`:
+
+```
+module_ML/reports/
+├── arxiv_report.json              # Paper metadata & metrics
+├── transformer_metrics.json       # Detailed transformer evaluation
+├── baseline_logreg_metrics.json   # Baseline evaluation
+├── metrics_comparison.png         # Figure 1: Metrics comparison chart
+├── confusion_matrices.png         # Figure 2: Confusion matrices visualization
+└── model_summary.png              # Figure 3: Model specifications & results
+```
+
+**How to integrate into your ArXiv paper:**
+1. Copy visualization PNGs to your paper's figures directory
+2. Reference `arxiv_report.json` for tables and empirical results
+3. Use template from this README's abstract section
 
 ## 📊 Model Performance
 

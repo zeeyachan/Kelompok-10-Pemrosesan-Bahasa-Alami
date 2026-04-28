@@ -5,6 +5,21 @@ Program Studi Sains Data — ITERA 2026
 
 ---
 
+## 🎓 Full Training Results - Ready for ArXiv
+
+**✨ Models successfully trained on complete Tokopedia dataset (65,335 samples)**
+
+| Model | Accuracy | Macro F1 | Weighted F1 | Speed | Memory |
+|-------|----------|----------|-------------|-------|--------|
+| **Baseline** (TF-IDF + LogReg) | **94.36%** ⭐ | 51.64% | 95.75% | < 100ms | < 500MB |
+| **Transformer** (IndoBERT) | 88.70% | 50.88% | 92.68% | ~500ms | ~500MB |
+
+- 📖 [Full Module ML Documentation](module_ML/README.md)
+- 📊 [Visualizations](module_ML/reports/) - metrics comparison, confusion matrices, model summary
+- 📄 [ArXiv Report](module_ML/reports/arxiv_report.json) - paper-ready format
+
+---
+
 ## 👥 Anggota Tim
 
 - <img src="https://github.com/zeeyachan.png" width="22"> **Nabila Zakiyah Zahra** (122450139) — [@zeeyachan](https://github.com/zeeyachan)
