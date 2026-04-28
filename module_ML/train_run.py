@@ -107,6 +107,7 @@ def main() -> None:
     summary = {
         "baseline_logreg_macro_f1": pick_metric(baseline_logreg),
         "baseline_svm_macro_f1": pick_metric(baseline_svm),
+        "baseline_nb_macro_f1": pick_metric(load_json(REPORT_DIR / "baseline_nb_metrics.json")),
         "transformer_indobert_macro_f1": pick_metric(transformer),
     }
 

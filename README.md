@@ -19,7 +19,7 @@ Program Studi Sains Data — ITERA 2026
 | **4. IndoBERT Transformer** | 88.70% | 0.5088 | 0.9268 | ~500ms | ~500MB |
 
 - 📖 [Full Module ML Documentation](module_ML/README.md)
-- 📊 [Visualizations](module_ML/reports/) - metrics comparison, confusion matrices, model summary
+- 📊 [Visualizations](module_ML/reports/) - 4-model metrics comparison, confusion matrices, model summary
 - 📄 [ArXiv Report](module_ML/reports/arxiv_report.json) - paper-ready format
 
 ---

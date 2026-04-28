@@ -1,6 +1,6 @@
 # Module ML - Analisis Sentimen Tokopedia
 
-Pipeline end-to-end untuk sentiment classification pada ulasan produk Tokopedia menggunakan TF-IDF + Logistic Regression (baseline) dan IndoBERT (transformer).
+Pipeline end-to-end untuk sentiment classification pada ulasan produk Tokopedia menggunakan tiga model TF-IDF baseline (Logistic Regression, SVM, Multinomial Naive Bayes) dan satu model transformer IndoBERT.
 
 ## 🎯 Final Training Results (ArXiv-Ready)
 
@@ -8,16 +8,17 @@ Pipeline end-to-end untuk sentiment classification pada ulasan produk Tokopedia 
 
 ### Performance Summary
 
-| Metric | Baseline | Transformer |
-|--------|----------|-------------|
-| **Accuracy** | 🥇 **94.36%** | 88.70% |
-| **Macro F1** | 🥇 **51.64%** | 50.88% |
-| **Weighted F1** | 🥇 **95.75%** | 92.68% |
-| Test Samples | 13,067 | 13,067 |
-| Training Speed | < 30 sec | ~30-60 min (GPU) |
-| Inference | < 100ms/sample | ~500ms/sample |
+| Model | Accuracy | Macro F1 | Weighted F1 |
+|-------|----------|----------|-------------|
+| **TF-IDF + Logistic Regression** | 94.36% | 0.5164 | 0.9575 |
+| **TF-IDF + Support Vector Machine** | **97.60%** | **0.5506** | **0.9740** |
+| **TF-IDF + Multinomial Naive Bayes** | 97.53% | 0.3292 | 0.9634 |
+| **IndoBERT Transformer** | 88.70% | 0.5088 | 0.9268 |
+| Test Samples | 13,067 | 13,067 | 13,067 |
+| Training Speed | < 30 sec | < 30 sec | ~30-60 min (GPU) |
+| Inference | < 100ms/sample | < 100ms/sample | ~500ms/sample |
 
-**Key Insight**: Baseline model achieves surprisingly high performance with minimal computational overhead - excellent for production deployment!
+**Key Insight**: Tiga baseline ML diuji bersama Transformer. SVM memberikan akurasi terbaik di antara ML, sementara IndoBERT mendukung pemahaman konteks semantik Bahasa Indonesia.
 
 ## 🚀 Quick Start
 
@@ -59,15 +60,12 @@ Hasil evaluasi terbaru dengan full training data:
 
 ![Metrics Comparison](reports/metrics_comparison.png)
 
-- **Baseline (TF-IDF + LogReg)**: Cepat dan stabil, cocok untuk baseline
-  - Accuracy: ~89%
-  - Macro F1: ~51%
-  - Weighted F1: ~93%
+- **Baseline ML**: Terdiri dari LogReg, SVM, dan Multinomial Naive Bayes. SVM menunjukkan akurasi tertinggi, sementara Naive Bayes memiliki inferensi paling cepat.
 
 - **Transformer (IndoBERT)**: Better understanding semantik bahasa Indonesia
-  - Accuracy: ~89%
-  - Macro F1: ~65-70% (dengan full training data)
-  - Weighted F1: ~94%
+  - Accuracy: 88.70%
+  - Macro F1: 50.88%
+  - Weighted F1: 92.68%
 
 ### Confusion Matrices
 
@@ -79,12 +77,16 @@ Hasil evaluasi terbaru dengan full training data:
 
 ## 📁 Output
 
-- **Model baseline**: `module_ML/models/baseline/tfidf_logreg.joblib`
-- **Model deep learning**: `module_ML/models/deep_learning/final_model/` (IndoBERT)
+- **Model baseline**:
+  - `module_ML/models/baseline/tfidf_logreg.joblib`
+  - `module_ML/models/baseline/tfidf_svm.joblib`
+  - `module_ML/models/baseline/tfidf_nb.joblib`
+- **Model deep learning**: `module_ML/models/transformer/final_model/` (IndoBERT)
 - **Reports evaluasi**: `module_ML/reports/`
-  - `baseline_logreg_metrics.json` - Baseline metrics
-  - `baseline_svm_metrics.json` - SVM metrics (experiment)
-  - `transformer_metrics.json` - Deep learning metrics
+  - `baseline_logreg_metrics.json` - Logistic Regression metrics
+  - `baseline_svm_metrics.json` - SVM metrics
+  - `baseline_nb_metrics.json` - Multinomial Naive Bayes metrics
+  - `transformer_metrics.json` - Transformer metrics
   - Visualisasi PNG: `metrics_comparison.png`, `confusion_matrices.png`, `model_summary.png`
 
 ## 🔧 Cara Kerja
